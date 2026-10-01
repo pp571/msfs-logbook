@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="tr" class="dark h-full">
+<html lang="en" class="h-full">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>EFB Flight Logbook</title>
+  <title>Electronic Flight Bag - Logbook</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="EFB Logbook">
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -15,17 +15,18 @@
 
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            efbBg: '#0b111e',
-            efbPanel: '#131c2e',
-            efbCard: '#1a263d',
-            efbBorder: '#243452',
-            thyRed: '#e11937',
-            lhYellow: '#f3a000',
-            efbAccent: '#3b82f6'
+            efbBg: '#f1f5f9',
+            efbPanel: '#ffffff',
+            efbCard: '#f8fafc',
+            efbBorder: '#cbd5e1',
+            efbTextPrimary: '#0f172a',
+            efbTextSecondary: '#475569',
+            aviationRed: '#d97706',
+            aviationBlue: '#0284c7',
+            navyHeader: '#1e293b'
           }
         }
       }
@@ -33,156 +34,211 @@
   </script>
 </head>
 
-<body class="bg-efbBg text-slate-100 font-sans h-full overflow-hidden select-none">
+<body class="bg-efbBg text-efbTextPrimary font-sans h-full overflow-hidden select-none">
 
-  <!-- iPad EFB Ana Konteyner -->
+  <!-- Main iPad Container -->
   <div class="flex h-full w-full">
 
-    <!-- SOL PANEL: Uçuş Geçmişi & İstatistikler (%45) -->
-    <div class="w-[45%] h-full bg-efbPanel border-r border-efbBorder flex flex-col p-6 overflow-hidden">
+    <!-- LEFT PANEL: Flight History & Stats (42%) -->
+    <div class="w-[42%] h-full bg-efbPanel border-r border-efbBorder flex flex-col p-6 overflow-hidden">
       
-      <!-- EFB Header -->
+      <!-- Header -->
       <div class="flex justify-between items-center pb-4 border-b border-efbBorder">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-thyRed flex items-center justify-center text-white font-bold shadow-md shadow-thyRed/20">
-            <i class="fa-solid fa-plane"></i>
+          <div class="w-10 h-10 rounded-xl bg-navyHeader text-white flex items-center justify-center font-bold shadow-md">
+            <i class="fa-solid fa-plane-flight text-lg"></i>
           </div>
           <div>
-            <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-              PILOT LOGBOOK <span class="text-[10px] bg-efbBorder text-slate-300 px-1.5 py-0.5 rounded font-mono">EFB v2.0</span>
+            <h1 class="text-base font-bold tracking-tight text-navyHeader">
+              PILOT LOGBOOK <span class="text-[10px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-mono font-bold">EFB v3.0</span>
             </h1>
-            <p class="text-[11px] text-slate-400">Electronic Flight Bag • Crew Interface</p>
+            <p class="text-[11px] text-efbTextSecondary">Electronic Flight Bag • Pilot Interface</p>
           </div>
         </div>
-        <button onclick="exportData()" class="px-3 py-1.5 text-xs font-semibold bg-efbCard hover:bg-efbBorder text-slate-300 rounded-lg border border-efbBorder transition">
-          <i class="fa-solid fa-download mr-1"></i> Dışa Aktar
+        <button onclick="exportData()" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-300 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-file-export text-slate-500"></i> Export JSON
         </button>
       </div>
 
-      <!-- İstatistikler -->
-      <div class="grid grid-cols-3 gap-3 my-4">
-        <div class="bg-efbCard p-3 rounded-xl border border-efbBorder/80">
-          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Toplam Süre</p>
-          <p id="statTotalHours" class="text-xl font-black text-lhYellow font-mono mt-0.5">00:00</p>
+      <!-- Overview Stats -->
+      <div class="grid grid-cols-2 gap-3 my-4">
+        <div class="bg-efbCard p-3.5 rounded-xl border border-efbBorder">
+          <p class="text-[10px] text-efbTextSecondary font-bold uppercase tracking-wider">Total Flight Hours</p>
+          <p id="statTotalHours" class="text-2xl font-black text-aviationBlue font-mono mt-0.5">00:00</p>
         </div>
-        <div class="bg-efbCard p-3 rounded-xl border border-efbBorder/80">
-          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Uçuş Sayısı</p>
-          <p id="statTotalFlights" class="text-xl font-black text-sky-400 font-mono mt-0.5">0</p>
-        </div>
-        <div class="bg-efbCard p-3 rounded-xl border border-efbBorder/80">
-          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">İniş Sayısı</p>
-          <p id="statTotalLandings" class="text-xl font-black text-emerald-400 font-mono mt-0.5">0</p>
+        <div class="bg-efbCard p-3.5 rounded-xl border border-efbBorder">
+          <p class="text-[10px] text-efbTextSecondary font-bold uppercase tracking-wider">Total Sectors</p>
+          <p id="statTotalFlights" class="text-2xl font-black text-navyHeader font-mono mt-0.5">0</p>
         </div>
       </div>
 
-      <!-- Uçuş Geçmişi -->
+      <!-- Flight History List -->
       <div class="flex items-center justify-between mb-2">
-        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Son Sektörler</h2>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-efbTextSecondary">Recent Sectors</h2>
       </div>
       <div id="flightList" class="flex-1 overflow-y-auto space-y-2.5 pr-1">
-        <!-- JS ile doldurulacak -->
+        <!-- Loaded via JavaScript -->
       </div>
     </div>
 
-    <!-- SAĞ PANEL: Yeni Uçuş Ekleme Formu (%55) -->
-    <div class="w-[55%] h-full bg-efbBg p-6 overflow-y-auto flex flex-col justify-between">
+    <!-- RIGHT PANEL: Entry Form (58%) -->
+    <div class="w-[58%] h-full bg-efbBg p-6 overflow-y-auto flex flex-col justify-between">
       <div>
-        <!-- Başlık -->
+        <!-- Title bar -->
         <div class="flex items-center justify-between mb-5 pb-3 border-b border-efbBorder">
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-pen-to-square text-thyRed"></i> UÇUŞ KAYDI (SECTOR LOG)
+          <h2 class="text-base font-bold text-navyHeader flex items-center gap-2">
+            <i class="fa-solid fa-pen-clip text-aviationBlue"></i> NEW SECTOR ENTRY
           </h2>
-          <span class="text-xs text-slate-400 font-mono">ALL TIMES IN UTC / ZULU</span>
+          <span class="text-xs text-efbTextSecondary font-mono font-bold">ALL TIMES IN UTC / ZULU</span>
         </div>
 
         <form id="flightForm" onsubmit="saveFlight(event)" class="space-y-4">
           
-          <!-- Satır 1: Tarih & Uçak -->
-          <div class="grid grid-cols-3 gap-3">
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tarih</label>
-              <input type="date" id="date" required class="w-full bg-efbCard border border-efbBorder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-thyRed">
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Uçak Tipi</label>
-              <input type="text" id="aircraft" placeholder="Örn: B787-9 / A350" required class="w-full bg-efbCard border border-efbBorder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-thyRed">
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tescil / Callsign</label>
-              <input type="text" id="registration" placeholder="Örn: TC-LJA" class="w-full bg-efbCard border border-efbBorder rounded-lg px-3 py-2 text-sm text-white font-mono uppercase focus:outline-none focus:border-thyRed">
-            </div>
-          </div>
-
-          <!-- Satır 2: Rota ve Canlı METAR Sorgulama -->
-          <div class="grid grid-cols-3 gap-3">
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Kalkış (DEP)</label>
-              <input type="text" id="dep" placeholder="LTFM" maxlength="4" onblur="fetchMetar('dep')" required class="w-full bg-efbCard border border-efbBorder rounded-lg px-3 py-2 text-sm text-white font-mono uppercase focus:outline-none focus:border-thyRed">
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Varış (ARR)</label>
-              <input type="text" id="arr" placeholder="EDDF" maxlength="4" onblur="fetchMetar('arr')" required class="w-full bg-efbCard border border-efbBorder rounded-lg px-3 py-2 text-sm text-white font-mono uppercase focus:outline-none focus:border-thyRed">
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Yedek (ALTN)</label>
-              <input type="text" id="altn" placeholder="EDDK" maxlength="4" class="w-full bg-efbCard border border-efbBorder rounded-lg px-3 py-2 text-sm text-white font-mono uppercase focus:outline-none focus:border-thyRed">
-            </div>
-          </div>
-
-          <!-- Canlı METAR Bilgi Kutusu -->
-          <div id="metarBox" class="hidden bg-efbCard/90 p-3 rounded-lg border border-efbBorder text-xs space-y-1">
-            <div class="flex items-center justify-between text-lhYellow font-mono font-bold text-[11px]">
-              <span><i class="fa-solid fa-cloud-sun-rain mr-1"></i> CANLI METAR BİLGİSİ</span>
-              <span id="metarStation" class="uppercase"></span>
-            </div>
-            <p id="metarText" class="text-slate-300 font-mono text-[11px] leading-relaxed break-words select-text">Yükleniyor...</p>
-          </div>
-
-          <!-- Satır 3: Blok Saatleri ve Süre -->
-          <div class="grid grid-cols-3 gap-3 p-3 bg-efbCard/50 rounded-xl border border-efbBorder">
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Off-Block (Out)</label>
-              <input type="time" id="offBlock" onchange="calculateDuration()" required class="w-full bg-efbCard border border-efbBorder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-thyRed">
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">On-Block (In)</label>
-              <input type="time" id="onBlock" onchange="calculateDuration()" required class="w-full bg-efbCard border border-efbBorder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-thyRed">
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Block Time</label>
-              <input type="text" id="duration" readonly placeholder="00:00" class="w-full bg-efbBg border border-efbBorder rounded-lg px-3 py-2 text-sm text-lhYellow font-bold font-mono cursor-not-allowed">
-            </div>
-          </div>
-
-          <!-- Satır 4: Şartlar ve İnişler -->
+          <!-- Row 1: Date & Aircraft Selection -->
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Uçuş Kuralı</label>
-              <select id="rules" class="w-full bg-efbCard border border-efbBorder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-thyRed">
-                <option value="IFR">IFR (Instrument)</option>
-                <option value="VFR">VFR (Visual)</option>
-              </select>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-efbTextSecondary mb-1">Date</label>
+              <input type="date" id="date" required class="w-full bg-efbPanel border border-efbBorder rounded-lg px-3 py-2 text-sm font-medium text-efbTextPrimary focus:outline-none focus:ring-2 focus:ring-aviationBlue">
             </div>
             <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">İniş Sayısı</label>
-              <input type="number" id="landings" value="1" min="1" class="w-full bg-efbCard border border-efbBorder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-thyRed">
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-efbTextSecondary mb-1">Aircraft Type</label>
+              <select id="aircraft" required class="w-full bg-efbPanel border border-efbBorder rounded-lg px-3 py-2 text-sm font-medium text-efbTextPrimary focus:outline-none focus:ring-2 focus:ring-aviationBlue">
+                <option value="" disabled selected>Select Aircraft Model...</option>
+                
+                <optgroup label="Airbus Family">
+                  <option value="Airbus A220-100">Airbus A220-100</option>
+                  <option value="Airbus A220-300">Airbus A220-300</option>
+                  <option value="Airbus A319neo">Airbus A319neo</option>
+                  <option value="Airbus A320-200">Airbus A320-200</option>
+                  <option value="Airbus A320neo">Airbus A320neo</option>
+                  <option value="Airbus A321-200">Airbus A321-200</option>
+                  <option value="Airbus A321neo">Airbus A321neo</option>
+                  <option value="Airbus A321LR/XLR">Airbus A321LR / XLR</option>
+                  <option value="Airbus A330-200">Airbus A330-200</option>
+                  <option value="Airbus A330-300">Airbus A330-300</option>
+                  <option value="Airbus A330-900neo">Airbus A330-900neo</option>
+                  <option value="Airbus A340-300">Airbus A340-300</option>
+                  <option value="Airbus A340-600">Airbus A340-600</option>
+                  <option value="Airbus A350-900">Airbus A350-900</option>
+                  <option value="Airbus A350-1000">Airbus A350-1000</option>
+                  <option value="Airbus A380-800">Airbus A380-800</option>
+                </optgroup>
+
+                <optgroup label="Boeing Family">
+                  <option value="Boeing 737-700">Boeing 737-700</option>
+                  <option value="Boeing 737-800">Boeing 737-800</option>
+                  <option value="Boeing 737-900ER">Boeing 737-900ER</option>
+                  <option value="Boeing 737 MAX 8">Boeing 737 MAX 8</option>
+                  <option value="Boeing 737 MAX 9">Boeing 737 MAX 9</option>
+                  <option value="Boeing 737 MAX 10">Boeing 737 MAX 10</option>
+                  <option value="Boeing 747-400">Boeing 747-400</option>
+                  <option value="Boeing 747-8i">Boeing 747-8i</option>
+                  <option value="Boeing 757-200">Boeing 757-200</option>
+                  <option value="Boeing 757-300">Boeing 757-300</option>
+                  <option value="Boeing 767-300ER">Boeing 767-300ER</option>
+                  <option value="Boeing 777-200ER">Boeing 777-200ER</option>
+                  <option value="Boeing 777-300ER">Boeing 777-300ER</option>
+                  <option value="Boeing 777F">Boeing 777F (Freighter)</option>
+                  <option value="Boeing 777-9X">Boeing 777-9X</option>
+                  <option value="Boeing 787-8">Boeing 787-8 Dreamliner</option>
+                  <option value="Boeing 787-9">Boeing 787-9 Dreamliner</option>
+                  <option value="Boeing 787-10">Boeing 787-10 Dreamliner</option>
+                </optgroup>
+
+                <optgroup label="General Aviation / Other">
+                  <option value="Cessna 172 Skyhawk">Cessna 172 Skyhawk</option>
+                  <option value="Beechcraft Bonanza">Beechcraft Bonanza G36</option>
+                  <option value="Cirrus SR22">Cirrus SR22</option>
+                  <option value="Other Aircraft">Other / Custom</option>
+                </optgroup>
+              </select>
             </div>
           </div>
 
-          <!-- Notlar -->
-          <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Uçuş Notları & Yaklaşma Detayları</label>
-            <textarea id="notes" rows="2" placeholder="Pist 16R ILS Cat III yaklaşması, rüzgar hamleli..." class="w-full bg-efbCard border border-efbBorder rounded-lg p-3 text-sm text-white focus:outline-none focus:border-thyRed resize-none"></textarea>
+          <!-- Row 2: Flight Number, Callsign, Registration -->
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-efbTextSecondary mb-1">Flight No.</label>
+              <input type="text" id="flightNumber" placeholder="THY123" class="w-full bg-efbPanel border border-efbBorder rounded-lg px-3 py-2 text-sm font-mono font-bold uppercase text-efbTextPrimary focus:outline-none focus:ring-2 focus:ring-aviationBlue">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-efbTextSecondary mb-1">Callsign</label>
+              <input type="text" id="callsign" placeholder="TURKISH 123" class="w-full bg-efbPanel border border-efbBorder rounded-lg px-3 py-2 text-sm font-mono font-bold uppercase text-efbTextPrimary focus:outline-none focus:ring-2 focus:ring-aviationBlue">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-efbTextSecondary mb-1">Tail Reg.</label>
+              <input type="text" id="registration" placeholder="TC-LJA" class="w-full bg-efbPanel border border-efbBorder rounded-lg px-3 py-2 text-sm font-mono uppercase text-efbTextPrimary focus:outline-none focus:ring-2 focus:ring-aviationBlue">
+            </div>
           </div>
 
-          <!-- Kaydet Butonu -->
-          <button type="submit" class="w-full bg-thyRed hover:bg-red-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-thyRed/20 transition flex items-center justify-center gap-2 tracking-wide uppercase text-xs">
-            <i class="fa-solid fa-check-double"></i> Sektör Kaydını Tamamla
+          <!-- Row 3: Route (DEP / ARR / ALTN) -->
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-efbTextSecondary mb-1">Departure (DEP)</label>
+              <input type="text" id="dep" placeholder="LTFM" maxlength="4" required class="w-full bg-efbPanel border border-efbBorder rounded-lg px-3 py-2 text-sm font-mono font-bold uppercase text-efbTextPrimary focus:outline-none focus:ring-2 focus:ring-aviationBlue">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-efbTextSecondary mb-1">Arrival (ARR)</label>
+              <input type="text" id="arr" placeholder="EGLL" maxlength="4" required class="w-full bg-efbPanel border border-efbBorder rounded-lg px-3 py-2 text-sm font-mono font-bold uppercase text-efbTextPrimary focus:outline-none focus:ring-2 focus:ring-aviationBlue">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-efbTextSecondary mb-1">Alternate (ALTN)</label>
+              <input type="text" id="altn" placeholder="EGKK" maxlength="4" class="w-full bg-efbPanel border border-efbBorder rounded-lg px-3 py-2 text-sm font-mono uppercase text-efbTextPrimary focus:outline-none focus:ring-2 focus:ring-aviationBlue">
+            </div>
+          </div>
+
+          <!-- Row 4: Flight Levels & Step Climb -->
+          <div class="bg-efbPanel p-3 rounded-xl border border-efbBorder space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold uppercase tracking-wider text-efbTextSecondary">
+                Flight Level / Cruise Altitudes (Step Climb)
+              </label>
+              <button type="button" onclick="addStepClimbInput()" class="text-xs text-aviationBlue hover:underline font-bold flex items-center gap-1">
+                <i class="fa-solid fa-circle-plus"></i> Add Step Climb
+              </button>
+            </div>
+            <div id="flContainer" class="flex flex-wrap gap-2">
+              <input type="text" placeholder="Initial FL (e.g. FL320)" class="fl-input bg-efbCard border border-efbBorder rounded-lg px-3 py-1.5 text-xs font-mono font-bold uppercase text-efbTextPrimary w-44 focus:outline-none focus:border-aviationBlue" required>
+            </div>
+          </div>
+
+          <!-- Row 5: Block Times & Rules -->
+          <div class="grid grid-cols-4 gap-3 p-3 bg-efbPanel rounded-xl border border-efbBorder">
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-efbTextSecondary mb-1">Off-Block (Out)</label>
+              <input type="time" id="offBlock" onchange="calculateDuration()" required class="w-full bg-efbCard border border-efbBorder rounded-lg px-2 py-1.5 text-xs font-bold text-efbTextPrimary focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-efbTextSecondary mb-1">On-Block (In)</label>
+              <input type="time" id="onBlock" onchange="calculateDuration()" required class="w-full bg-efbCard border border-efbBorder rounded-lg px-2 py-1.5 text-xs font-bold text-efbTextPrimary focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-efbTextSecondary mb-1">Block Time</label>
+              <input type="text" id="duration" readonly placeholder="00:00" class="w-full bg-slate-100 border border-efbBorder rounded-lg px-2 py-1.5 text-xs font-black font-mono text-aviationBlue cursor-not-allowed">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-efbTextSecondary mb-1">Rules</label>
+              <select id="rules" class="w-full bg-efbCard border border-efbBorder rounded-lg px-2 py-1.5 text-xs font-bold text-efbTextPrimary focus:outline-none">
+                <option value="IFR">IFR</option>
+                <option value="VFR">VFR</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Remarks -->
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-efbTextSecondary mb-1">Remarks & Operational Notes</label>
+            <textarea id="notes" rows="2" placeholder="Approach details, weather conditions, ATC re-routes..." class="w-full bg-efbPanel border border-efbBorder rounded-lg p-2.5 text-sm text-efbTextPrimary focus:outline-none focus:ring-2 focus:ring-aviationBlue resize-none"></textarea>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="w-full bg-navyHeader hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 tracking-wider uppercase text-xs">
+            <i class="fa-solid fa-check"></i> Log Sector To EFB
           </button>
         </form>
       </div>
 
-      <p class="text-center text-[10px] text-slate-500 mt-4 font-mono">AVCOCKPIT EFB SYSTEM • CREW LOGBOOK VERSION</p>
+      <p class="text-center text-[10px] text-efbTextSecondary mt-4 font-mono">ELECTRONIC FLIGHT BAG • CREW LOGBOOK SYSTEM</p>
     </div>
 
   </div>
@@ -197,32 +253,13 @@
       return JSON.parse(localStorage.getItem('msfs_flights') || '[]');
     }
 
-    // Canlı METAR Çekme (aviationweather.gov API)
-    async function fetchMetar(type) {
-      const field = document.getElementById(type);
-      const icao = field.value.trim().toUpperCase();
-      if (icao.length !== 4) return;
-
-      const metarBox = document.getElementById('metarBox');
-      const metarStation = document.getElementById('metarStation');
-      const metarText = document.getElementById('metarText');
-
-      metarBox.classList.remove('hidden');
-      metarStation.innerText = `${icao} METAR`;
-      metarText.innerText = 'Güncel METAR verisi çekiliyor...';
-
-      try {
-        const response = await fetch(`https://aviationweather.gov/api/data/metar?ids=${icao}&format=raw`);
-        const data = await response.text();
-        
-        if (data && data.trim() !== '') {
-          metarText.innerText = data.trim();
-        } else {
-          metarText.innerText = `${icao} için METAR bulunamadı.`;
-        }
-      } catch (err) {
-        metarText.innerText = 'METAR bağlantısı sağlanamadı.';
-      }
+    function addStepClimbInput() {
+      const container = document.getElementById('flContainer');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = `Step FL${container.children.length + 1} (e.g. FL360)`;
+      input.className = 'fl-input bg-efbCard border border-efbBorder rounded-lg px-3 py-1.5 text-xs font-mono font-bold uppercase text-efbTextPrimary w-44 focus:outline-none focus:border-aviationBlue';
+      container.appendChild(input);
     }
 
     function calculateDuration() {
@@ -245,19 +282,27 @@
       e.preventDefault();
       const flights = getStoredFlights();
 
+      // Collect Flight Levels
+      const flInputs = document.querySelectorAll('.fl-input');
+      const flightLevels = Array.from(flInputs)
+        .map(i => i.value.trim().toUpperCase())
+        .filter(v => v !== '');
+
       const newFlight = {
         id: Date.now(),
         date: document.getElementById('date').value,
         aircraft: document.getElementById('aircraft').value,
+        flightNumber: document.getElementById('flightNumber').value.toUpperCase(),
+        callsign: document.getElementById('callsign').value.toUpperCase(),
         registration: document.getElementById('registration').value.toUpperCase(),
         dep: document.getElementById('dep').value.toUpperCase(),
         arr: document.getElementById('arr').value.toUpperCase(),
         altn: document.getElementById('altn').value.toUpperCase(),
+        flightLevels: flightLevels,
         offBlock: document.getElementById('offBlock').value,
         onBlock: document.getElementById('onBlock').value,
         duration: document.getElementById('duration').value,
         rules: document.getElementById('rules').value,
-        landings: parseInt(document.getElementById('landings').value) || 1,
         notes: document.getElementById('notes').value
       };
 
@@ -267,13 +312,17 @@
       document.getElementById('flightForm').reset();
       document.getElementById('date').valueAsDate = new Date();
       document.getElementById('duration').value = '';
-      document.getElementById('metarBox').classList.add('hidden');
+      
+      // Reset FL inputs to single input
+      document.getElementById('flContainer').innerHTML = `
+        <input type="text" placeholder="Initial FL (e.g. FL320)" class="fl-input bg-efbCard border border-efbBorder rounded-lg px-3 py-1.5 text-xs font-mono font-bold uppercase text-efbTextPrimary w-44 focus:outline-none focus:border-aviationBlue" required>
+      `;
       
       loadFlights();
     }
 
     function deleteFlight(id) {
-      if (!confirm('Bu sektör kaydını silmek istediğinize emin misiniz?')) return;
+      if (!confirm('Are you sure you want to delete this sector log?')) return;
       let flights = getStoredFlights();
       flights = flights.filter(f => f.id !== id);
       localStorage.setItem('msfs_flights', JSON.stringify(flights));
@@ -286,10 +335,9 @@
       listEl.innerHTML = '';
 
       let totalMins = 0;
-      let totalLandings = 0;
 
       if (flights.length === 0) {
-        listEl.innerHTML = `<div class="text-center py-12 text-slate-500 text-xs font-mono">SEKTÖR KAYDI BULUNAMADI</div>`;
+        listEl.innerHTML = `<div class="text-center py-12 text-efbTextSecondary text-xs font-mono">NO SECTOR RECORDS FOUND</div>`;
       }
 
       flights.forEach(f => {
@@ -297,30 +345,37 @@
           const [h, m] = f.duration.split(':').map(Number);
           totalMins += (h * 60) + m;
         }
-        totalLandings += (f.landings || 1);
+
+        const flDisplay = f.flightLevels && f.flightLevels.length > 0 
+          ? f.flightLevels.join(' → ') 
+          : 'N/A';
 
         const card = document.createElement('div');
-        card.className = "bg-efbCard border border-efbBorder rounded-xl p-3.5 transition hover:border-slate-600 relative";
+        card.className = "bg-efbPanel border border-efbBorder rounded-xl p-3.5 shadow-sm transition hover:border-slate-400 relative";
         card.innerHTML = `
           <div class="flex justify-between items-start mb-1.5">
             <div class="flex items-center gap-2">
-              <span class="text-sm font-black text-white font-mono tracking-wider">${f.dep}</span>
-              <i class="fa-solid fa-arrow-right text-[10px] text-thyRed"></i>
-              <span class="text-sm font-black text-white font-mono tracking-wider">${f.arr}</span>
-              ${f.altn ? `<span class="text-[9px] bg-efbBg text-slate-400 px-1 py-0.5 rounded border border-efbBorder font-mono">ALTN: ${f.altn}</span>` : ''}
+              <span class="text-sm font-black text-navyHeader font-mono tracking-wider">${f.dep}</span>
+              <i class="fa-solid fa-arrow-right text-[10px] text-slate-400"></i>
+              <span class="text-sm font-black text-navyHeader font-mono tracking-wider">${f.arr}</span>
+              ${f.altn ? `<span class="text-[9px] bg-slate-100 text-slate-600 px-1 py-0.5 rounded border border-slate-200 font-mono">ALTN: ${f.altn}</span>` : ''}
             </div>
             <div class="flex items-center gap-2">
-              <span class="text-xs font-black text-lhYellow font-mono bg-efbBg px-2 py-0.5 rounded border border-efbBorder">${f.duration || '00:00'}</span>
-              <button onclick="deleteFlight(${f.id})" class="text-slate-500 hover:text-thyRed text-xs px-1 transition">
+              <span class="text-xs font-extrabold text-aviationBlue font-mono bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${f.duration || '00:00'}</span>
+              <button onclick="deleteFlight(${f.id})" class="text-slate-400 hover:text-red-500 text-xs px-1 transition">
                 <i class="fa-solid fa-xmark"></i>
               </button>
             </div>
           </div>
-          <div class="flex justify-between items-center text-xs text-slate-400">
-            <span class="font-medium text-slate-300"><i class="fa-solid fa-plane-up text-slate-500 mr-1.5"></i>${f.aircraft} <span class="text-slate-500 font-mono text-[11px]">(${f.registration || 'N/A'})</span></span>
-            <span class="font-mono text-[11px] text-slate-400">${f.date}</span>
+          <div class="flex justify-between items-center text-xs text-efbTextSecondary mb-1">
+            <span class="font-bold text-slate-700"><i class="fa-solid fa-plane text-slate-400 mr-1.5"></i>${f.aircraft}</span>
+            <span class="font-mono text-[11px] text-slate-500">${f.date}</span>
           </div>
-          ${f.notes ? `<p class="text-[11px] text-slate-400 mt-2 pt-1.5 border-t border-efbBorder/50 italic line-clamp-1 font-mono">${f.notes}</p>` : ''}
+          <div class="flex items-center justify-between text-[11px] font-mono text-slate-500 pt-1 border-t border-slate-100">
+            <span>FL: <strong class="text-slate-700">${flDisplay}</strong></span>
+            <span>${f.flightNumber ? `F/N: <strong class="text-slate-700">${f.flightNumber}</strong>` : ''} ${f.callsign ? `(${f.callsign})` : ''}</span>
+          </div>
+          ${f.notes ? `<p class="text-[11px] text-slate-500 mt-1.5 italic line-clamp-1 font-mono">${f.notes}</p>` : ''}
         `;
         listEl.appendChild(card);
       });
@@ -329,7 +384,6 @@
       const totalM = (totalMins % 60).toString().padStart(2, '0');
       document.getElementById('statTotalHours').innerText = `${totalH}:${totalM}`;
       document.getElementById('statTotalFlights').innerText = flights.length;
-      document.getElementById('statTotalLandings').innerText = totalLandings;
     }
 
     function exportData() {
