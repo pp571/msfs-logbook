@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>MSFS Flight Logbook</title>
+  
+  <!-- PWA & iPad Meta Etiketleri -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MSFS Logbook">
+
+  <!-- Tailwind CSS & FontAwesome Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cockpit: '#0f172a',
+            panel: '#1e293b',
+            accent: '#38bdf8',
+            accentDark: '#0284c7'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-cockpit text-slate-100 font-sans h-full overflow-hidden select-none">
+
+  <!-- iPad Uygulama Ana Konteyner -->
+  <div class="flex h-full w-full">
+
+    <!-- SOL TARAFLI PANEL: İstatistikler & Uçuş Geçmişi (Width: 45%) -->
+    <div class="w-[45%] h-full bg-panel/60 border-r border-slate-800 flex flex-col p-6 overflow-hidden">
+      
+      <!-- Header -->
+      <div class="flex justify-between items-center pb-5 border-b border-slate-800">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
+            <i class="fa-solid fa-plane-departure text-accent"></i> Seyir Defteri
+          </h1>
+          <p class="text-xs text-slate-400 mt-1">MSFS Manuel Uçuş Takip Sistemi</p>
+        </div>
+        <button id="exportBtn" onclick="exportData()" class="px-3 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition">
+          <i class="fa-solid fa-download mr-1">="</i> JSON Aktar
+        </button>
+      </div>
+
+      <!-- İstatistik Kartları -->
+      <div class="grid grid-cols-3 gap-3 my-5">
+        <div class="bg-panel p-3.5 rounded-xl border border-slate-800/80">
+          <p class="text-[11px] text-slate-400 font-medium">Toplam Uçuş</p>
+          <p id="statTotalHours" class="text-xl font-extrabold text-accent mt-0.5">00:00</p>
+        </div>
+        <div class="bg-panel p-3.5 rounded-xl border border-slate-800/80">
+          <p class="text-[11px] text-slate-400 font-medium">Toplam Kayıt</p>
+          <p id="statTotalFlights" class="text-xl font-extrabold text-emerald-400 mt-0.5">0</p>
+        </div>
+        <div class="bg-panel p-3.5 rounded-xl border border-slate-800/80">
+          <p class="text-[11px] text-slate-400 font-medium">Toplam İniş</p>
+          <p id="statTotalLandings" class="text-xl font-extrabold text-amber-400 mt-0.5">0</p>
+        </div>
+      </div>
+
+      <!-- Uçuş Geçmişi Listesi -->
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Son Uçuşlar</h2>
+      <div id="flightList" class="flex-1 overflow-y-auto space-y-3 pr-1">
+        <!-- JS ile dinamik olarak doldurulur -->
+      </div>
+    </div>
+
+    <!-- SAĞ TARAFLI PANEL: Yeni Uçuş Ekleme Formu (Width: 55%) -->
+    <div class="w-[55%] h-full bg-cockpit p-8 overflow-y-auto flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-circle-plus text-accent"></i> Yeni Uçuş Kaydı
+          </h2>
+          <span class="text-xs text-slate-500">Tüm saat formatları hh:mm'dir</span>
+        </div>
+
+        <form id="flightForm" onsubmit="saveFlight(event)" class="space-y-5">
+          
+          <!-- Satır 1: Tarih & Uçak Bilgisi -->
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Tarih</label>
+              <input type="date" id="date" required class="w-full bg-panel border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Uçak Tipi</label>
+              <input type="text" id="aircraft" placeholder="Örn: A320neo" required class="w-full bg-panel border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Kuyruk Tescili</label>
+              <input type="text" id="registration" placeholder="Örn: TC-JYA" uppercase class="w-full bg-panel border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent uppercase">
+            </div>
+          </div>
+
+          <!-- Satır 2: Rota Bilgisi -->
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Kalkış (ICAO)</label>
+              <input type="text" id="dep" placeholder="LTFM" maxlength="4" required class="w-full bg-panel border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono uppercase focus:outline-none focus:border-accent">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Varış (ICAO)</label>
+              <input type="text" id="arr" placeholder="EGLL" maxlength="4" required class="w-full bg-panel border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono uppercase focus:outline-none focus:border-accent">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Yedek Meydan</label>
+              <input type="text" id="altn" placeholder="EGKK" maxlength="4" class="w-full bg-panel border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono uppercase focus:outline-none focus:border-accent">
+            </div>
+          </div>
+
+          <!-- Satır 3: Saatler (Otomatik Hesaplamalı) -->
+          <div class="grid grid-cols-3 gap-4 p-4 bg-panel/40 rounded-xl border border-slate-800/80">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Off-Block (Kalkış)</label>
+              <input type="time" id="offBlock" onchange="calculateDuration()" required class="w-full bg-panel border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">On-Block (Varış)</label>
+              <input type="time" id="onBlock" onchange="calculateDuration()" required class="w-full bg-panel border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Hesaplanan Süre</label>
+              <input type="text" id="duration" readonly placeholder="00:00" class="w-full bg-slate-800/50 border border-slate-800 rounded-lg px-3 py-2 text-sm text-accent font-bold font-mono cursor-not-allowed">
+            </div>
+          </div>
+
+          <!-- Satır 4: Şartlar ve İniş -->
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Uçuş Kuralı</label>
+              <select id="rules" class="w-full bg-panel border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent">
+                <option value="IFR">IFR</option>
+                <option value="VFR">VFR</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">İniş Sayısı</label>
+              <input type="number" id="landings" value="1" min="1" class="w-full bg-panel border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Gece Uçuşu (Saat)</label>
+              <input type="number" step="0.1" id="nightHours" placeholder="0.0" class="w-full bg-panel border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent">
+            </div>
+          </div>
+
+          <!-- Satır 5: Notlar -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Uçuş Notları</label>
+            <textarea id="notes" rows="3" placeholder="Pist durumu, yaklaşma türü veya hava durumu detayları..." class="w-full bg-panel border border-slate-800 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-accent resize-none"></textarea>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="w-full bg-accent hover:bg-accentDark text-slate-950 font-bold py-3.5 rounded-xl shadow-lg shadow-accent/10 transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-floppy-disk"></i> Uçuşu Seyir Defterine Kaydet
+          </button>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <p class="text-center text-[11px] text-slate-600 mt-6">MSFS 2024 Independent Logbook • Veriler iPad hafızasında (LocalStorage) saklanır.</p>
+    </div>
+
+  </div>
+
+  <!-- JavaScript Mantığı -->
+  <script>
+    // Sayfa Yüklendiğinde
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('date').valueAsDate = new Date();
+      loadFlights();
+    });
+
+    // LocalStorage İşlemleri
+    function getStoredFlights() {
+      return JSON.parse(localStorage.getItem('msfs_flights') || '[]');
+    }
+
+    function calculateDuration() {
+      const off = document.getElementById('offBlock').value;
+      const on = document.getElementById('onBlock').value;
+      if (!off || !on) return;
+
+      const [offH, offM] = off.split(':').map(Number);
+      const [onH, onM] = on.split(':').map(Number);
+
+      let totalMinutes = (onH * 60 + onM) - (offH * 60 + offM);
+      if (totalMinutes < 0) totalMinutes += 24 * 60; // Gece yarısı geçişi
+
+      const h = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+      const m = (totalMinutes % 60).toString().padStart(2, '0');
+      document.getElementById('duration').value = `${h}:${m}`;
+    }
+
+    function saveFlight(e) {
+      e.preventDefault();
+      const flights = getStoredFlights();
+
+      const newFlight = {
+        id: Date.now(),
+        date: document.getElementById('date').value,
+        aircraft: document.getElementById('aircraft').value,
+        registration: document.getElementById('registration').value.toUpperCase(),
+        dep: document.getElementById('dep').value.toUpperCase(),
+        arr: document.getElementById('arr').value.toUpperCase(),
+        altn: document.getElementById('altn').value.toUpperCase(),
+        offBlock: document.getElementById('offBlock').value,
+        onBlock: document.getElementById('onBlock').value,
+        duration: document.getElementById('duration').value,
+        rules: document.getElementById('rules').value,
+        landings: parseInt(document.getElementById('landings').value) || 1,
+        nightHours: parseFloat(document.getElementById('nightHours').value) || 0,
+        notes: document.getElementById('notes').value
+      };
+
+      flights.unshift(newFlight);
+      localStorage.setItem('msfs_flights', JSON.stringify(flights));
+      
+      document.getElementById('flightForm').reset();
+      document.getElementById('date').valueAsDate = new Date();
+      document.getElementById('duration').value = '';
+      
+      loadFlights();
+    }
+
+    function deleteFlight(id) {
+      if (!confirm('Bu uçuş kaydını silmek istediğinize emin misiniz?')) return;
+      let flights = getStoredFlights();
+      flights = flights.filter(f => f.id !== id);
+      localStorage.setItem('msfs_flights', JSON.stringify(flights));
+      loadFlights();
+    }
+
+    function loadFlights() {
+      const flights = getStoredFlights();
+      const listEl = document.getElementById('flightList');
+      listEl.innerHTML = '';
+
+      let totalMins = 0;
+      let totalLandings = 0;
+
+      if (flights.length === 0) {
+        listEl.innerHTML = `<div class="text-center py-10 text-slate-500 text-xs">Henüz kayıtlı uçuş yok. Sağ taraftan ekleyebilirsiniz.</div>`;
+      }
+
+      flights.forEach(f => {
+        // Süre Hesaplama Accumulator
+        if (f.duration) {
+          const [h, m] = f.duration.split(':').map(Number);
+          totalMins += (h * 60) + m;
+        }
+        totalLandings += (f.landings || 1);
+
+        const card = document.createElement('div');
+        card.className = "bg-panel border border-slate-800 rounded-xl p-4 transition hover:border-slate-700 relative group";
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <span class="text-xs font-bold text-accent font-mono tracking-wider">${f.dep} → ${f.arr}</span>
+              <span class="text-[10px] text-slate-500 ml-2">(${f.rules})</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-extrabold text-white font-mono bg-slate-800 px-2 py-0.5 rounded">${f.duration || '00:00'}</span>
+              <button onclick="deleteFlight(${f.id})" class="text-slate-600 hover:text-red-400 text-xs px-1">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          <div class="flex justify-between text-xs text-slate-400">
+            <span><i class="fa-solid fa-plane text-slate-500 mr-1"></i>${f.aircraft} (${f.registration || 'N/A'})</span>
+            <span><i class="fa-regular fa-calendar text-slate-500 mr-1"></i>${f.date}</span>
+          </div>
+          ${f.notes ? `<p class="text-[11px] text-slate-500 mt-2 italic line-clamp-1">${f.notes}</p>` : ''}
+        `;
+        listEl.appendChild(card);
+      });
+
+      // İstatistikleri Güncelle
+      const totalH = Math.floor(totalMins / 60).toString().padStart(2, '0');
+      const totalM = (totalMins % 60).toString().padStart(2, '0');
+      document.getElementById('statTotalHours').innerText = `${totalH}:${totalM}`;
+      document.getElementById('statTotalFlights').innerText = flights.length;
+      document.getElementById('statTotalLandings').innerText = totalLandings;
+    }
+
+    function exportData() {
+      const flights = getStoredFlights();
+      const blob = new Blob([JSON.stringify(flights, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `msfs_logbook_backup_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+  </script>
+</body>
+</html>
